@@ -20,6 +20,7 @@ library(dplyr)
 library(plotly)
 library(factoextra)
 library(cluster)
+library(clValid)
 ### Read Data
 x<-read.csv('https://raw.githubusercontent.com/arikunco/machinelearning/master/dataset/online_retail_clean.csv')
 
@@ -42,7 +43,7 @@ p
 #### Dari Summary data dan dari plot data terihat bahwa terdapat data monetary dengan nilai <0
 #### secara logika tidak mungkin jumlah pembelian <0 maka data ini di anggap data invalid yang harus dibuang
 #### selain data NA juga harus dibuang dari data set
-
+x
 x<-filter(x, monetary >= 0) %>% na.omit(x)
 print(summary(x))
 
@@ -126,70 +127,59 @@ p
 #### Compute Dissimilarity Matrix
 
 res.dist <- dist(x.scale[,2:4], method = "euclidean")
-res.hc <- hclust(d = res.dist, method = "ward.D2")
+res.hc <- hclust(d = res.dist, method = "complete")
 
-res.hc
-fviz_dend(res.hc, cex = 0.5)
 
-# ## Mencari Center Number Optimal
-# 
-# wss <- 0
-# 
-# ### For 1 to 15 cluster centers
-# for (i in 1:15) {
-#   km.out <- kmeans(x.scale[,2:4], centers = i, nstart = 20)
-#   ### Save total within sum of squares to wss variable
-#   wss[i] <- km.out$tot.withinss
-# }
-# 
-# 
-# ### Plot total within sum of squares vs. number of clusters
-# print(plot(1:15, wss, type = "b", 
-#      xlab = "Number of Clusters", 
-#      ylab = "Within groups sum of squares"))
-# 
-# km.out <- kmeans(x[,2:4], center=3, nstart=10)
-# x$cluster <- km.out$cluster
-# plot(x[,2:4], col = x$cluster,
-#      main = "Cluster of Customer")
-# 
-# 
-# 
-# 
-# 
-# summary(km.out)
-# print(km.out$cluster)
-# print(km.out)
-# 
-# 
-# #p <- plot_ly(midwest, x = ~percollege, color = ~state, type = "box")
-# #p
-# 
-# x$cluster <- as.factor(x$cluster)
-# 
-# 
-# p <- plot_ly(x, x = ~recency, y = ~frequency, z = ~monetary, color = ~cluster, colors = c('#BF382A', '#0C4B8E')) %>%
-#   add_markers() %>%
-#   layout(scene = list(xaxis = list(title = 'Recency'),
-#                       yaxis = list(title = 'Frequency'),
-#                       zaxis = list(title = 'Monetary')))
-# 
-# p
-# 
-# 
-# 
-# 
-# 
-# 
-# plot(x[,2:3], col=x$cluster)
-# 
-# 
-# 
-# library("plot3D")
-# 
-#  
-# scatter3D(x$recency, x$frequency, x$monetary, col= x$cluster)
-# 
-# 
-# #library(plotly)
-# 
+plot(res.hc)
+
+### Mencari Algoritma Optimal
+
+clmethods <- c("hierarchical","kmeans","pam")
+intr <- clValid(x.scale[,2:4], nClust = 2:6, clMethods = clmethods,validation = "internal", maxitems = 2350 ,metric = "euclidean",method = "complete")
+summary(intr)
+optimalScores(intr)
+####Diketahui algoritma optimal adalah Hirarki Cluster dengan jumlah cluster = 2
+hc.out <- cutree(res.hc, k=2)
+x.scale$clusterhc <- hc.out
+head(x.scale)
+
+
+#### Plot hasil clustering
+plot(x.scale[,2:4], col = x.scale$clusterhc,
+     main = "HC of RFM")
+
+#### 3D plot
+p <- plot_ly(x.scale, x = ~recency, y = ~frequency, z = ~monetary, color = ~clusterhc) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = 'Recency'),
+                      yaxis = list(title = 'Frequency'),
+                      zaxis = list(title = 'Monetary')))
+
+p
+
+x.scale2<-filter(x.scale, monetary <= 16)
+
+intr <- clValid(x.scale2[,2:4], nClust = 2:6, clMethods = clmethods,validation = "internal", maxitems = 2350 ,metric = "euclidean",method = "complete")
+summary(intr)
+optimalScores(intr)
+
+res.dist <- dist(x.scale2[,2:4], method = "euclidean")
+res.hc <- hclust(d = res.dist, method = "complete")
+
+hc.out <- cutree(res.hc, k=3)
+x.scale2$clusterhc <- hc.out
+head(x.scale2)
+
+
+#### Plot hasil clustering
+plot(x.scale2[,2:4], col = x.scale$clusterhc,
+     main = "HC of RFM")
+
+#### 3D plot
+p <- plot_ly(x.scale2, x = ~recency, y = ~frequency, z = ~monetary, color = ~clusterhc) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = 'Recency'),
+                      yaxis = list(title = 'Frequency'),
+                      zaxis = list(title = 'Monetary')))
+
+p
