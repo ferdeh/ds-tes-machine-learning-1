@@ -1,4 +1,3 @@
-# ds-tes-machine-learning-1
 ---
 title: "Unsupervised Machine learning With Clustering Method"
 output: html_notebook
@@ -216,7 +215,7 @@ p
 
 
 ## Evaluation
-Dari plot terlihat pembagian 2 kluster secara bisnis terarti apa-apa.
+Dari plot terlihat pembagian 2 kluster secara bisnis berarti apa-apa.
 perlu di evaluasi Ulang model dikarenakan tidak sesuai dengan keperluan bisnis
 tahapan kerja kembali ke Business Understanding dan data preparation
 
@@ -249,17 +248,19 @@ boxplot(x.clean2[,5:7])
 ### Mencari Algoritma Optimal
 ```{r}
 clmethods <- c("hierarchical","kmeans","pam")
-intr <- clValid(x.clean2[,5:7], nClust = 2:6, clMethods = clmethods,validation = "internal", maxitems = 2350 ,metric = "euclidean",method = "complete")
+intr <- clValid(x.clean2[,5:7], nClust = 2:4, clMethods = clmethods,validation = "internal", maxitems = 2350 ,metric = "euclidean",method = "complete")
 summary(intr)
 optimalScores(intr)
 ```
-Diketahui algoritma optimal dengan dunn index terbaik adalah Hirarki Cluster dengan jumlah cluster = 4
+
+
+Diketahui algoritma optimal dengan dunn index terbaik adalah Hirarki Cluster dengan jumlah cluster = 2
 
 ```{r}
 res.dist <- dist(x.clean2[,5:7], method = "euclidean")
 res.hc <- hclust(d = res.dist, method = "complete")
 plot(res.hc)
-hc.out <- cutree(res.hc, k=4)
+hc.out <- cutree(res.hc, k=2)
 x.clean2$clusterhc <- hc.out
 head(x.clean2)
 ```
@@ -289,9 +290,8 @@ p
 
 
 ## Kesimpulan
-Dari data transaksi pelanggan diketahui terdapat 4 kelompok pelanggan <br/>
-4 kelompok pelanggan lebih di bagi berdasarkan kekinian dari mereka melakukan transaksi <br/>
-Kelompok 1 ..... <br/>
-KELompok 2 .... <br/>
-Kelompok 3 ..... <br/>
-KELompok 4 .... <br/>
+Dari data transaksi pelanggan diketahui terdapat 2 kelompok pelanggan <br/>
+2 kelompok pelanggan lebih di bagi berdasarkan kekinian dari mereka melakukan transaksi <br/>
+nilai Monetary terdistribsi rapat sehingga dianggap satu kelompok. sedangkan nilai frequency distribusinya terlalu kecil hanya terdiri 3 nilai sehingga dianggap satu kelompok. Pembagian kelompok lebih kepada mempertimbangkan nilai recency
+Kelompok 1 adalah pembeli yang membeli kurang dari 250 hari <br/>
+KeLompok 2 adalah pembeli yang membeli lebih dari 250 hari <br/>
