@@ -43,7 +43,7 @@ p
 #### Dari Summary data dan dari plot data terihat bahwa terdapat data monetary dengan nilai <0
 #### secara logika tidak mungkin jumlah pembelian <0 maka data ini di anggap data invalid yang harus dibuang
 #### selain data NA juga harus dibuang dari data set
-x
+
 x<-filter(x, monetary >= 0) %>% na.omit(x)
 print(summary(x))
 
@@ -52,12 +52,15 @@ print(summary(x))
 #### dikarenakan setiap variable memiliki satuan dan skala yang berbeda, maka perlu dilakukan sclaling dari setiap nilai pada variable agar memiliki skala yang sama
 #### scale dilakukan dengan menghitung z score dari masing2 nilai variable
 
-x.scale <- as.data.frame(scale(x, scale = TRUE))
+x.scale <- as.data.frame(scale(x[,2:4], scale = TRUE))
 
 head(x.scale)
 summary(x.scale)
+x$recency_z <- x.scale$recency
+x$frequency_z <- x.scale$frequency
+x$monetary_z <- x.scale$monetary
 #### 3D Plot 
-p <- plot_ly(x.scale, x = ~recency, y = ~frequency, z = ~monetary) %>%
+p <- plot_ly(x, x = ~recency_z, y = ~frequency_z, z = ~monetary_z) %>%
   add_markers() %>%
   layout(scene = list(xaxis = list(title = 'Recency'),
                       yaxis = list(title = 'Frequency'),
@@ -71,27 +74,26 @@ p
 #### Mencari jumlah cluster optimal
 
 #### Elbow method
-fviz_nbclust(x.scale[,2:4], kmeans, method = "wss") +
-  geom_vline(xintercept = 3, linetype = 2)+
+fviz_nbclust(x[,5:7], kmeans, method = "wss") +
+  geom_vline(xintercept = 4, linetype = 2)+
   labs(subtitle = "Elbow method")
 
 ##### Silhouette method
-fviz_nbclust(x.scale[,2:4], kmeans, method = "silhouette")+
+fviz_nbclust(x[,5:7], kmeans, method = "silhouette")+
   labs(subtitle = "Silhouette method")
 
 #### Kedua metode menghasilkan jumlah K optimal k=4
 
 #### Membuat model k-mean
-km.out <- kmeans(x.scale[,2:4], center=3, nstart=10)
-x.scale$cluster <- km.out$cluster
+km.out <- kmeans(x[,5:7], center=4, nstart=10)
 x$cluster <- km.out$cluster
 
 #### Plot hasil clustering
-plot(x.scale[,2:4], col = x.scale$cluster,
+plot(x[,5:7], col = x$cluster,
      main = "K-MEANS of RFM")
 
 #### 3D plot
-p <- plot_ly(x.scale, x = ~recency, y = ~frequency, z = ~monetary, color = ~cluster) %>%
+p <- plot_ly(x, x = ~recency_z, y = ~frequency_z, z = ~monetary_z, color = ~cluster) %>%
   add_markers() %>%
   layout(scene = list(xaxis = list(title = 'Recency'),
                       yaxis = list(title = 'Frequency'),
@@ -101,20 +103,20 @@ p
 
 ### K-MEDOIDS (PAM) Method
 ### Mencari Jumlah Cluster Optimal
-fviz_nbclust(x.scale[,2:4], pam, method = "silhouette")+
+fviz_nbclust(x[,5:7], pam, method = "silhouette")+
   theme_classic()
 
 #### jumlah K Optimal adalah k=2
-pam.out<-pam(x.scale[,2:4], 2, metric = "euclidean", stand = FALSE)
-x.scale$clusterpam <-pam.out$clustering
-head(x.scale)
+pam.out<-pam(x[,5:7], 2, metric = "euclidean", stand = FALSE)
+x$clusterpam <-pam.out$clustering
+head(x)
 
 #### Plot hasil clustering
-plot(x.scale[,2:4], col = x.scale$clusterpam,
+plot(x[,5:7], col = x$clusterpam,
      main = "K-MEDOIDS of RFM")
 
 #### 3D plot
-p <- plot_ly(x.scale, x = ~recency, y = ~frequency, z = ~monetary, color = ~clusterpam) %>%
+p <- plot_ly(x, x = ~recency_z, y = ~frequency_z, z = ~monetary_z, color = ~clusterpam) %>%
   add_markers() %>%
   layout(scene = list(xaxis = list(title = 'Recency'),
                       yaxis = list(title = 'Frequency'),
@@ -126,7 +128,7 @@ p
 ### Hirarchical Method
 #### Compute Dissimilarity Matrix
 
-res.dist <- dist(x.scale[,2:4], method = "euclidean")
+res.dist <- dist(x[,5:7], method = "euclidean")
 res.hc <- hclust(d = res.dist, method = "complete")
 
 
@@ -135,21 +137,21 @@ plot(res.hc)
 ### Mencari Algoritma Optimal
 
 clmethods <- c("hierarchical","kmeans","pam")
-intr <- clValid(x.scale[,2:4], nClust = 2:6, clMethods = clmethods,validation = "internal", maxitems = 2350 ,metric = "euclidean",method = "complete")
+intr <- clValid(x[,5:7], nClust = 2:6, clMethods = clmethods,validation = "internal", maxitems = 2350 ,metric = "euclidean",method = "complete")
 summary(intr)
 optimalScores(intr)
 ####Diketahui algoritma optimal adalah Hirarki Cluster dengan jumlah cluster = 2
 hc.out <- cutree(res.hc, k=2)
-x.scale$clusterhc <- hc.out
-head(x.scale)
+x$clusterhc <- hc.out
+head(x)
 
 
 #### Plot hasil clustering
-plot(x.scale[,2:4], col = x.scale$clusterhc,
+plot(x[,5:7], col = x$clusterhc,
      main = "HC of RFM")
 
 #### 3D plot
-p <- plot_ly(x.scale, x = ~recency, y = ~frequency, z = ~monetary, color = ~clusterhc) %>%
+p <- plot_ly(x, x = ~recency_z, y = ~frequency_z, z = ~monetary_z, color = ~clusterhc) %>%
   add_markers() %>%
   layout(scene = list(xaxis = list(title = 'Recency'),
                       yaxis = list(title = 'Frequency'),
@@ -157,29 +159,67 @@ p <- plot_ly(x.scale, x = ~recency, y = ~frequency, z = ~monetary, color = ~clus
 
 p
 
-x.scale2<-filter(x.scale, monetary <= 16)
+## Evaluation
+#### Dari plot terlihat pembagian 2 kluster secara bisnis terarti apa-apa.
+#### perlu di evaluasi Ulang model dikarenakan tidak sesuai dengan keperluan bisnis
+#### tahapan kerja kembali ke Business Understanding dan data preparation
 
-intr <- clValid(x.scale2[,2:4], nClust = 2:6, clMethods = clmethods,validation = "internal", maxitems = 2350 ,metric = "euclidean",method = "complete")
+
+## Data Preparation Iterasi ke-2
+#### Cek Outlier 
+
+boxplot(x[,5:7])
+#### Data frequency dan monetary terlalu banyak outlier sehingga model kluster yang dihasilkan tidak memiliki arti
+
+#### Membersihkan Outlier
+
+boxplot(x$frequency_z)
+freq.outlier <- boxplot(x$frequency_z)$out
+
+x.clean1<-x[-which(x$frequency_z %in% freq.outlier),]
+boxplot(x.clean1[,5:7])
+boxplot(x$monetary_z)
+money.outlier <- boxplot(x.clean1$monetary_z)$out
+x.clean2<-x.clean1[-which(x.clean1$monetary_z %in% money.outlier),]
+boxplot(x.clean2[,5:7])
+
+## Built Model Tahap 2
+
+### Mencari Algoritma Optimal
+
+clmethods <- c("hierarchical","kmeans","pam")
+intr <- clValid(x.clean2[,5:7], nClust = 2:4, clMethods = clmethods,validation = "internal", maxitems = 2350 ,metric = "euclidean",method = "complete")
 summary(intr)
 optimalScores(intr)
 
-res.dist <- dist(x.scale2[,2:4], method = "euclidean")
+#### Diketahui algoritma optimal dengan dunn index terbaik adalah Hirarki Cluster dengan jumlah cluster = 2
+res.dist <- dist(x.clean2[,5:7], method = "euclidean")
 res.hc <- hclust(d = res.dist, method = "complete")
-
-hc.out <- cutree(res.hc, k=3)
-x.scale2$clusterhc <- hc.out
-head(x.scale2)
-
+plot(res.hc)
+hc.out <- cutree(res.hc, k=2)
+x.clean2$clusterhc <- hc.out
+head(x.clean2)
 
 #### Plot hasil clustering
-plot(x.scale2[,2:4], col = x.scale$clusterhc,
+plot(x.clean2[,5:7], col = x.clean2$clusterhc,
+     main = "HC of RFM with z scale")
+
+plot(x.clean2[,2:4], col = x.clean2$clusterhc,
      main = "HC of RFM")
 
 #### 3D plot
-p <- plot_ly(x.scale2, x = ~recency, y = ~frequency, z = ~monetary, color = ~clusterhc) %>%
+p <- plot_ly(x.clean2, x = ~recency, y = ~frequency, z = ~monetary, color = ~clusterhc) %>%
   add_markers() %>%
-  layout(scene = list(xaxis = list(title = 'Recency'),
-                      yaxis = list(title = 'Frequency'),
-                      zaxis = list(title = 'Monetary')))
+  layout(scene = list(xaxis = list(title = 'Recency (days)'),
+                      yaxis = list(title = 'Frequency(times)'),
+                      zaxis = list(title = 'Monetary(dollar)')))
 
 p
+
+## Kesimpulan
+# Dari data transaksi pelanggan diketahui terdapat 2 kelompok pelanggan <br/>
+#   2 kelompok pelanggan lebih di bagi berdasarkan kekinian dari mereka melakukan transaksi <br/>
+#   nilai Monetary terdistribsi rapat sehingga dianggap satu kelompok. sedangkan nilai frequency distribusinya terlalu kecil hanya terdiri 3 nilai sehingga dianggap satu kelompok. Pembagian kelompok lebih kepada mempertimbangkan nilai recency
+# Kelompok 1 adalah pembeli yang membeli kurang dari 250 hari <br/>
+# KeLompok 2 adalah pembeli yang membeli lebih dari 250 hari <br/>
+#   
