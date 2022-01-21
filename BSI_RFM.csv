@@ -1,0 +1,23 @@
+category,ID,F,R,M
+info atau keluhan lain,1,36,12,76
+kendala transaksi,2,10,24,76
+kualitas layanan,3,10,34,76
+proses lama,4,37,23,76
+terblokir,5,10,27,76
+pelayanan buruk,6,18,32,76
+Fasilitas layanan,7,6,43,76
+akses sulit,8,4,35,1800
+e-channel,9,11,50,1800
+fitur belum tersedia,10,33,12,1800
+layanan masih dalam pengembangan,11,13,26,1800
+mobile banking error,12,131,7,1800
+aplikasi tidak nyaman,13,52,10,1800
+Transaksi gagal,14,23,65,1800
+Tidak bisa buka rekening,15,7,69,1800
+aktivasi,16,6,29,1800
+akun palsu,17,31,23,500
+kontak atas nama BSI,18,3,23,500
+penipuan,19,11,26,500
+saldo hilang,20,15,13,500
+skimming,21,2,32,500
+keamanan aplikasi,22,5,160,500
